@@ -1,51 +1,26 @@
 using System;
+using System.IO;
+using System.Net.Http;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.CSharp.Scripting;
-using Microsoft.CodeAnalysis.Scripting;
 
 class Program
 {
-    
-    public static string GlobalText = "Это пример глобального текста";
-
     static async Task Main(string[] args)
     {
-        Console.WriteLine("==== Обработка текста через скрипт ====\n");
-        Console.WriteLine("Глобальный текст:\n" + GlobalText + "\n");
+        string imageUrl = "https://via.placeholder.com/300";
+        string localPath = Path.Combine(Directory.GetCurrentDirectory(), "downloaded_image.jpg");
 
-        Console.WriteLine("Примеры команд:");
-        Console.WriteLine("  GlobalText.Length            // Кол-во символов");
-        Console.WriteLine("  GlobalText.Split(' ').Length // Кол-во слов");
-        Console.WriteLine("Введите выражение для выполнения или 'exit':\n");
+        using HttpClient client = new();
 
-        while (true)
+        try
         {
-            Console.Write(">> ");
-            string code = Console.ReadLine();
-
-            if (code?.ToLower() == "exit") break;
-
-            try
-            {
-                var result = await CSharpScript.EvaluateAsync(
-                    code,
-                    ScriptOptions.Default
-                        .AddReferences(typeof(Program).Assembly)
-                        .AddImports("System"),
-                    globals: new Globals());
-
-                Console.WriteLine($"Результат: {result}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"⚠ Ошибка: {ex.Message}");
-            }
+            byte[] imageBytes = await client.GetByteArrayAsync(imageUrl);
+            await File.WriteAllBytesAsync(localPath, imageBytes);
+            Console.WriteLine($"Изображение успешно сохранено: {localPath}");
         }
-    }
-
-    
-    public class Globals
-    {
-        public string GlobalText => Program.GlobalText;
+        catch (Exception ex)
+        {
+            Console.WriteLine("Ошибка при загрузке изображения: " + ex.Message);
+        }
     }
 }
